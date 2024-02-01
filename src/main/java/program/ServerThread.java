@@ -1,5 +1,6 @@
 package program;
 
+import javafx.application.Platform;
 import javafx.scene.control.TextArea;
 
 import java.io.*;
@@ -37,12 +38,12 @@ public class ServerThread extends Thread {
             while (true)
             {
                 String message=ins.get(clientID).readLine();
-                textArea.appendText(message+"\n");
+                Platform.runLater(() -> textArea.appendText(message + "\n"));
                 for(int i=0;i<sockets.size();i++)
                 {
                     if(i!=clientID)
                     {
-                        outs.get(i).println(message+"\n");
+                        outs.get(i).println(message);
                     }
                 }
 

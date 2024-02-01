@@ -10,7 +10,6 @@ public class Alice extends Client{
         primaryStage.setTitle(clientName);
         super.start(primaryStage);
 
-
     }
 
     public static void main(String[] args) {

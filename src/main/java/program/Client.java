@@ -1,6 +1,7 @@
 package program;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -40,8 +41,12 @@ public class Client extends Application {
 
         new Thread(()->{
             try {
-                String recievedMessage=in.readLine();
-                textArea.appendText(recievedMessage+"\n");
+                 String receivedMessage ;
+                while ((receivedMessage  = in.readLine()) != null) {
+                    String finalReceivedMessage = receivedMessage;
+                    //javaFX metoda koja azurira UI elemente iz sporedne niti
+                    Platform.runLater(() -> textArea.appendText(finalReceivedMessage + "\n"));
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -70,7 +75,7 @@ public class Client extends Application {
 
         sendButton.setOnAction(e -> {
             String message = textField.getText();
-            if(message!=null && !message.isEmpty())
+            if(message!=null && !message.trim().isEmpty())
             {
                 textArea.appendText("You: " + message + "\n");
                 out.println("["+clientName+"]: "+message);
