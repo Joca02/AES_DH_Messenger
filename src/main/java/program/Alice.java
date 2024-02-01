@@ -2,11 +2,11 @@ package program;
 
 import javafx.stage.Stage;
 
-public class Bob extends Client{
+public class Alice extends Client{
     @Override
     public void start(Stage primaryStage) throws Exception {
 
-        clientName="Bob";
+        clientName="Alice";
         primaryStage.setTitle(clientName);
         super.start(primaryStage);
 

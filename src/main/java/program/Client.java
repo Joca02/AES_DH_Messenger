@@ -13,16 +13,49 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.kordamp.bootstrapfx.BootstrapFX;
 
+import java.io.*;
+import java.net.InetAddress;
+import java.net.Socket;
+
 
 public class Client extends Application {
 
-    private final int SCENE_WIDTH=600;
-    private final int SCENE_HEIGHT=500;
+    public String clientName;
+    TextArea textArea;
+    private  InetAddress adress;
+    private Socket socket;
+    private PrintWriter out;
+    private BufferedReader in;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
 
+        adress=InetAddress.getLocalHost();
+        socket=new Socket(adress,9000);
+        in=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())),true);
 
+        Scene scene=initScene();
+        primaryStage.setScene(scene);
+
+        new Thread(()->{
+            try {
+                String recievedMessage=in.readLine();
+                textArea.appendText(recievedMessage+"\n");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+
+        primaryStage.show();
+
+    }
+
+
+    private Scene initScene()
+    {
+         final int SCENE_WIDTH=600;
+         final int SCENE_HEIGHT=500;
         Label label = new Label("Enter your message:");
 
         TextField textField = new TextField();
@@ -32,13 +65,18 @@ public class Client extends Application {
         paneSendMsg.setAlignment(Pos.TOP_CENTER);
         Button sendButton = new Button("Send");
 
-        TextArea textArea = new TextArea();
+        textArea = new TextArea();
 
 
         sendButton.setOnAction(e -> {
             String message = textField.getText();
-            textArea.appendText("You: " + message + "\n");
-            textField.clear();
+            if(message!=null && !message.isEmpty())
+            {
+                textArea.appendText("You: " + message + "\n");
+                out.println("["+clientName+"]: "+message);
+                textField.clear();
+            }
+
         });
 
 
@@ -62,14 +100,17 @@ public class Client extends Application {
         layout.getStyleClass().add("container");
         scene.getStylesheets().add(BootstrapFX.bootstrapFXStylesheet());
 
+        return scene;
 
-
-        primaryStage.setScene(scene);
-
-        primaryStage.show();
 
     }
-
+    @Override
+    public void stop() throws Exception {
+        in.close();
+        out.close();
+        socket.close();
+        super.stop();
+    }
 
 
 }
