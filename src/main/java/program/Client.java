@@ -14,40 +14,78 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.kordamp.bootstrapfx.BootstrapFX;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 
-public class Client extends Application {
+public class Client extends Application implements Serializable{
 
+    /*class ClientKey implements Serializable{
+       public String clientName;
+        public int key;
+       public ClientKey()
+       {
+            key= new SecureRandom().nextInt(3,100);
+            clientName=Client.this.clientName;
+       }
+    }*/
     public String clientName;
     TextArea textArea;
     private  InetAddress adress;
-    private Socket socket;
-    private PrintWriter out;
-    private BufferedReader in;
+    private  Socket socket;
+    private  ObjectOutputStream out;
+    private  ObjectInputStream in;
+
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-
-        adress=InetAddress.getLocalHost();
-        socket=new Socket(adress,9000);
-        in=new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())),true);
-
         Scene scene=initScene();
         primaryStage.setScene(scene);
+        adress=InetAddress.getLocalHost();
+        socket=new Socket(adress,9000);
+
+        out = new ObjectOutputStream(socket.getOutputStream());
+        //in = new ObjectInputStream(socket.getInputStream());
+
+        final ClientKey clientKey = new ClientKey(clientName);
+        //predaje svoje ime i kljuc
+        new Thread(()->{
+            try {
+
+                System.out.println(clientKey.clientName+" "+clientKey.key);
+
+                out.writeObject(clientKey);
+                out.flush();
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }).start();
+
+
 
         new Thread(()->{
             try {
-                 String receivedMessage ;
-                while ((receivedMessage  = in.readLine()) != null) {
-                    String finalReceivedMessage = receivedMessage;
+                 in=new ObjectInputStream(socket.getInputStream());
+
+                while (true) {
+
+                    Message receivedMessage = (Message) in.readObject();
+                    receivedMessage.decrypt();
+                    String finalReceivedMessage=receivedMessage.toString();
                     //javaFX metoda koja azurira UI elemente iz sporedne niti
                     Platform.runLater(() -> textArea.appendText(finalReceivedMessage + "\n"));
+                    //in.close();
                 }
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
         }).start();
@@ -71,14 +109,34 @@ public class Client extends Application {
         Button sendButton = new Button("Send");
 
         textArea = new TextArea();
-
+        textArea.setPrefHeight(300);
+        textArea.setEditable(false);
 
         sendButton.setOnAction(e -> {
             String message = textField.getText();
             if(message!=null && !message.trim().isEmpty())
             {
                 textArea.appendText("You: " + message + "\n");
-                out.println("["+clientName+"]: "+message);
+                try {
+                    Message messageObj=new Message(message,clientName);
+                    out.writeObject(messageObj);
+                    out.flush();
+
+
+                } catch (NoSuchPaddingException ex) {
+                    throw new RuntimeException(ex);
+                } catch (IllegalBlockSizeException ex) {
+                    throw new RuntimeException(ex);
+                } catch (NoSuchAlgorithmException ex) {
+                    throw new RuntimeException(ex);
+                } catch (BadPaddingException ex) {
+                    throw new RuntimeException(ex);
+                } catch (InvalidKeyException ex) {
+                    throw new RuntimeException(ex);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+
                 textField.clear();
             }
 
@@ -88,8 +146,9 @@ public class Client extends Application {
         VBox layout = new VBox(20);
         layout.setAlignment(Pos.TOP_CENTER);
         VBox.setMargin(paneSendMsg, new Insets(20, 0, 0, 0));
+        Label lblName=new Label(clientName);
 
-        layout.getChildren().addAll(paneSendMsg, sendButton, textArea);
+        layout.getChildren().addAll(lblName, paneSendMsg, sendButton, textArea);
 
 
 
@@ -97,6 +156,7 @@ public class Client extends Application {
         Scene scene = new Scene(layout, SCENE_WIDTH, SCENE_HEIGHT);
 
         //STYLES
+        lblName.setStyle("-fx-font-size: 35; -fx-font-family: 'Arial'; -fx-text-fill: #b06060; -fx-font-weight: bold; -fx-underline: true;");
         label.setStyle("-fx-font-size: 14;");
         textField.setStyle("-fx-font-size: 14;");
         sendButton.getStyleClass().addAll("btn", "btn-primary");

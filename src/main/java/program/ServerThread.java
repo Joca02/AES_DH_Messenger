@@ -2,24 +2,21 @@ package program;
 
 import javafx.application.Platform;
 import javafx.scene.control.TextArea;
-
 import java.io.*;
 import java.net.Socket;
+
 import java.util.ArrayList;
 
 public class ServerThread extends Thread {
     TextArea textArea;
 
 
-   static ArrayList<BufferedReader> ins;
-    static ArrayList<PrintWriter> outs;
+   static ArrayList<ObjectInputStream> ins;
+    static ArrayList<ObjectOutputStream> outs;
     ArrayList<Socket>sockets;
     int clientID;
-    static ArrayList<String>messages;
-    static {
-        messages=new ArrayList<>();
-    }
-    public ServerThread(int clientID,ArrayList<Socket>sockets,TextArea textArea,ArrayList<BufferedReader> inputs,ArrayList<PrintWriter> outputs) throws IOException {
+
+    public ServerThread(int clientID,ArrayList<Socket>sockets,TextArea textArea,ArrayList<ObjectInputStream> inputs,ArrayList<ObjectOutputStream> outputs) throws IOException {
         this.clientID=clientID;
         this.textArea=textArea;
 
@@ -37,20 +34,29 @@ public class ServerThread extends Thread {
         try {
             while (true)
             {
-                String message=ins.get(clientID).readLine();
-                Platform.runLater(() -> textArea.appendText(message + "\n"));
-                for(int i=0;i<sockets.size();i++)
+                Object receivedObject = ins.get(clientID).readObject();
+                if(receivedObject instanceof Message)
                 {
-                    if(i!=clientID)
+                    Message message = (Message) receivedObject;
+                    message.message=message.encrypt();
+                    Platform.runLater(() -> textArea.appendText(message.toString() + "\n"));
+                    message.sendPublicKeys(Server.clientsKeys);
+                    for(int i=0;i<sockets.size();i++)
                     {
-                        outs.get(i).println(message);
+                        if(i!=clientID)
+                        {
+
+                            outs.get(i).writeObject(message);
+                            outs.get(i).flush();
+                        }
                     }
                 }
 
             }
 
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
+
         }
     }
 }
