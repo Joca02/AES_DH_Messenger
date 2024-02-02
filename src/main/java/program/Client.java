@@ -27,15 +27,7 @@ import java.security.SecureRandom;
 
 public class Client extends Application implements Serializable{
 
-    /*class ClientKey implements Serializable{
-       public String clientName;
-        public int key;
-       public ClientKey()
-       {
-            key= new SecureRandom().nextInt(3,100);
-            clientName=Client.this.clientName;
-       }
-    }*/
+
     public String clientName;
     TextArea textArea;
     private  InetAddress adress;
@@ -53,6 +45,7 @@ public class Client extends Application implements Serializable{
 
         out = new ObjectOutputStream(socket.getOutputStream());
         //in = new ObjectInputStream(socket.getInputStream());
+
 
         final ClientKey clientKey = new ClientKey(clientName);
         //predaje svoje ime i kljuc

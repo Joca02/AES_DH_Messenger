@@ -56,20 +56,6 @@ public class Message implements Serializable {
         return  BigInteger.valueOf(1);
     }
 
-    /*public  void  encrypt() throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException
-    {
-        sharedKey=generateSharedKeyWithDH();
-        byte[]sharedKeyBytes=sharedKey.toByteArray();
-        byte[] keyBytes = new byte[16];
-        System.arraycopy(sharedKeyBytes, 0, keyBytes, 0, Math.min(sharedKeyBytes.length, keyBytes.length));
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-
-        byte[] encryptedBytes = cipher.doFinal(message.getBytes());
-        message=new String(encryptedBytes);
-        *//*return new String(encryptedBytes);*//*
-    }*/
 
     public String encrypt() {
         sharedKey = generateSharedKeyWithDH();
@@ -84,7 +70,7 @@ public class Message implements Serializable {
 
             byte[] encryptedBytes = cipher.doFinal(message.getBytes());
             if(Base64.getEncoder().encodeToString(encryptedBytes).equals(message))
-                System.out.println("WOTAFAK");
+                System.out.println("?????????");
             else System.out.println(Base64.getEncoder().encodeToString(encryptedBytes));
             return Base64.getEncoder().encodeToString(encryptedBytes);
         } catch (Exception e) {
@@ -92,35 +78,6 @@ public class Message implements Serializable {
         }
     }
 
-
-
-    /* public String decrypt()
-    {
-        return decrypt(message,sharedKey);
-    }*/
-  /*  public  void decrypt() {
-        try {
-            sharedKey=generateSharedKeyWithDH();
-            String ciphertext=message;
-            byte[] sharedKeyBytes = sharedKey.toByteArray();
-
-            byte[] keyBytes = new byte[16];
-            System.arraycopy(sharedKeyBytes, 0, keyBytes, 0, Math.min(sharedKeyBytes.length, keyBytes.length));
-
-            byte[] encryptedBytes = Base64.getDecoder().decode(ciphertext);
-
-            SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
-
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-
-            byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
-
-            message=new String(decryptedBytes);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }*/
     public void decrypt() {
         try {
             sharedKey = generateSharedKeyWithDH();
